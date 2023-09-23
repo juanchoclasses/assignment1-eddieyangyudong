@@ -17,8 +17,8 @@ import { PortsGlobal } from '../PortsGlobal';
 
 class SpreadSheetClient {
     private _serverPort: number = PortsGlobal.serverPort;
-    private _baseURL: string = `http://pencil.local:${this._serverPort}`;
-    private _userName: string = 'juancho';
+    private _baseURL: string = `http://localhost:${this._serverPort}`;
+    private _userName: string = 'eddie';
     private _documentName: string = 'test';
     private _document: DocumentTransport;
 

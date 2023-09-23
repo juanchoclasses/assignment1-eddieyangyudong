@@ -46,39 +46,117 @@ export class FormulaEvaluator {
   evaluate(formula: FormulaType) {
 
 
-    // set the this._result to the length of the formula
-
-    this._result = formula.length;
     this._errorMessage = "";
+    const postfix = this.infixToPostfix(formula);
+    if (this._errorMessage === ErrorMessages.missingParentheses) {
+      return;
+    }
 
-    switch (formula.length) {
-      case 0:
-        this._errorMessage = ErrorMessages.emptyFormula;
-        break;
-      case 7:
-        this._errorMessage = ErrorMessages.partial;
-        break;
-      case 8:
-        this._errorMessage = ErrorMessages.divideByZero;
-        break;
-      case 9:
-        this._errorMessage = ErrorMessages.invalidCell;
-        break;
-      case 10:
-        this._errorMessage = ErrorMessages.invalidFormula;
-        break;
-      case 11:
-        this._errorMessage = ErrorMessages.invalidNumber;
-        break;
-      case 12:
-        this._errorMessage = ErrorMessages.invalidOperator;
-        break;
-      case 13:
-        this._errorMessage = ErrorMessages.missingParentheses;
-        break;
+    this._result = this.evaluatePostfix(postfix);
+  }
+
+  infixToPostfix(formula: FormulaType): FormulaType {
+    let output: FormulaType = [];
+    let ops: TokenType[] = [];
+
+    formula.forEach((token, index) => {
+      if (this.isNumber(token)) {
+        output.push(token);
+      } else if (this.isCellReference(token)) {
+        const [value, error] = this.getCellValue(token);
+        if (error) {
+          this._errorMessage = error;
+          return 0; // Halt further execution
+        }
+        output.push(value);
+      } else if (token === "(") {
+        ops.push(token);
+      } else if (token === ")") {
+        if (index === 0 || formula[index - 1] === "(") {
+          this._errorMessage = ErrorMessages.missingParentheses;
+          return;
+        }
+        while (ops.length && ops[ops.length - 1] !== "(") {
+          output.push(ops.pop() as TokenType);
+        }
+        ops.pop();
+      } else {
+        while (ops.length && this.getPrecedence(ops[ops.length - 1]) >= this.getPrecedence(token)) {
+          output.push(ops.pop() as TokenType);
+        }
+        ops.push(token);
+      }
+    });
+
+    while (ops.length) {
+      output.push(ops.pop() as TokenType);
+    }
+
+    return output;
+  }
+
+  evaluatePostfix(postfix: FormulaType): number {
+
+    let stack: number[] = [];
+    let flag: boolean = false;
+    let flagResult: number = 0;
+
+    postfix.forEach(token => {
+      if (flag) {
+        return;
+      }
+      if (this.isNumber(token)) {
+        stack.push(parseFloat(token));
+      } else {
+        const b = stack.pop() as number;
+        const a = stack.pop();
+        if (a === undefined) {
+          this._errorMessage = ErrorMessages.invalidFormula;
+          flag = true;
+          flagResult = b;
+          return; // Halt further execution
+        }
+
+        switch (token) {
+          case "+":
+            stack.push(a + b);
+            break;
+          case "-":
+            stack.push(a - b);
+            break;
+          case "*":
+            stack.push(a * b);
+            break;
+          case "/":
+            if (b === 0) {
+              this._errorMessage = ErrorMessages.divideByZero;
+              flag = true;
+              flagResult = Infinity;
+              return; // Halt further execution
+            }
+            stack.push(a / b);
+            break;
+        }
+      }
+    });
+    
+    if (flag) {
+      return flagResult;
+    }
+
+    return stack[0] ?? 0;
+  }
+
+  getPrecedence(operator: TokenType): number {
+    switch (operator) {
+      case "+":
+      case "-":
+        return 1;
+      case "*":
+      case "/":
+        return 2;
       default:
-        this._errorMessage = "";
-        break;
+        return 0;
     }
   }
 
@@ -89,6 +167,9 @@ export class FormulaEvaluator {
   public get result(): number {
     return this._result;
   }
+
+   
+
 
 
 
@@ -109,7 +190,6 @@ export class FormulaEvaluator {
    * 
    */
   isCellReference(token: TokenType): boolean {
-
     return Cell.isValidCellLabel(token);
   }
 
