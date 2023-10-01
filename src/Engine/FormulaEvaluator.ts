@@ -102,6 +102,7 @@ export class FormulaEvaluator {
     let flagResult: number = 0;
 
     postfix.forEach(token => {
+      // use flag to halt further execution
       if (flag) {
         return;
       }
@@ -140,6 +141,7 @@ export class FormulaEvaluator {
       }
     });
     
+    // use flag to halt further execution
     if (flag) {
       return flagResult;
     }
@@ -167,11 +169,6 @@ export class FormulaEvaluator {
   public get result(): number {
     return this._result;
   }
-
-   
-
-
-
 
 
   /**

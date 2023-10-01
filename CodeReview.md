@@ -1,11 +1,11 @@
 ### Name of student that you code reviewed.
-- Name:
-- GitHub ID:
+- Name: Jinhao Ji
+- GitHub ID: jijinhao 
 
 
 ### Things that you noticed
-- Did the variable names make sense?
-- Is the code functional?
-- Are the comments readable?
-- Are the function names self-explanatory?
+- Did the variable names make sense? Yes
+- Is the code functional? Yes
+- Are the comments readable? Some should be modified
+- Are the function names self-explanatory? Yes
 
